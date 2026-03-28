@@ -1,0 +1,112 @@
+name: Build A52s Kernel
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    env:
+      DEFCONFIG: vendor/a52sxq_eur_open_defconfig
+      AK3_REPO: https://github.com/osm0sis/AnyKernel3.git
+      AK3_BRANCH: master
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bc bison build-essential ccache curl flex gawk git \
+            libelf-dev libncurses-dev libssl-dev lz4 pahole \
+            python3 python-is-python3 rsync unzip zip zstd
+
+      - name: Show repo info
+        run: |
+          pwd
+          ls
+          ls arch/arm64/configs/vendor/
+
+      - name: Build kernel
+        run: |
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export KBUILD_BUILD_USER=github
+          export KBUILD_BUILD_HOST=actions
+          export CC=clang
+          export LLVM=1
+          export LLVM_IAS=1
+
+          make O=out $DEFCONFIG
+          make O=out -j"$(nproc)"
+
+      - name: Find built kernel image
+        run: |
+          mkdir -p release
+
+          for f in \
+            out/arch/arm64/boot/Image \
+            out/arch/arm64/boot/Image.gz \
+            out/arch/arm64/boot/Image.gz-dtb \
+            out/arch/arm64/boot/Image.lz4 \
+            out/arch/arm64/boot/Image.lz4-dtb
+          do
+            if [ -f "$f" ]; then
+              cp "$f" release/
+              echo "KERNEL_IMAGE=$(basename "$f")" >> "$GITHUB_ENV"
+              break
+            fi
+          done
+
+          if [ -z "${KERNEL_IMAGE:-}" ]; then
+            echo "No kernel image found."
+            find out/arch/arm64/boot -maxdepth 2 -type f | sort || true
+            exit 1
+          fi
+
+          if [ -f out/arch/arm64/boot/dtbo.img ]; then
+            cp out/arch/arm64/boot/dtbo.img release/
+          fi
+
+      - name: Clone AnyKernel3
+        run: |
+          git clone --depth=1 --branch "$AK3_BRANCH" "$AK3_REPO" AnyKernel3
+
+      - name: Prepare flashable zip
+        run: |
+          cp "release/$KERNEL_IMAGE" "AnyKernel3/$KERNEL_IMAGE"
+
+          if [ -f release/dtbo.img ]; then
+            cp release/dtbo.img AnyKernel3/dtbo.img
+          fi
+
+          cd AnyKernel3
+
+          # Remove git metadata and CI junk from the zip
+          rm -rf .git .github README.md
+
+          ZIP_NAME="A52s-Kernel-${GITHUB_RUN_ID}.zip"
+          zip -r9 "../$ZIP_NAME" ./*
+
+          cd ..
+          mkdir -p artifacts
+          mv "$ZIP_NAME" artifacts/
+
+      - name: Upload flashable zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: a52s-kernel-${{ github.run_id }}
+          path: artifacts/*.zip
+          if-no-files-found: error
+          overwrite: true
