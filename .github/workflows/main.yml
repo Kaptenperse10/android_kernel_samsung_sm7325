@@ -24,12 +24,16 @@ jobs:
         with:
           submodules: recursive
          
-      - name : Get Android Clang
+      - name: Download Android clang
         run: |
-           git clone --depth=1 https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 prebuilts-clang
-           CLANG_BIN="$(find "" -type d -path '*/bin' | head -n 1)"
-           echo "$CLANG_BIN" >> $GITHUB_PATH
-          
+           mkdir -p toolchain
+           cd toolchain
+           git init
+           git remote add origin https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86
+           git fetch --depth=1 origin clang-r416183b1
+           git checkout FETCH_HEAD
+           echo "$PWD/clang-r416183b1/bin" >> $GITHUB_PATH
+         
       - name: Install dependencies
         run: |
           sudo apt-get update
