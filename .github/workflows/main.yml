@@ -39,30 +39,29 @@ jobs:
           pwd
           ls
           ls arch/arm64/configs/vendor/
-
+    
       - name: Build kernel
         run: |
-            export ARCH=arm64
-            export SUBARCH=arm64
-            export KBUILD_BUILD_USER=github
-            export KBUILD_BUILD_HOST=actions
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export KBUILD_BUILD_USER=github
+          export KBUILD_BUILD_HOST=actions
+          export CC=clang
+          export LD=ld.lld
+          export LLVM=1
+          export LLVM_IAS=1
 
-            export CC=clang
-            export LD=ld.lld
-            export LLVM=1
-            export LLVM_IAS=1
+          export CLANG_TRIPLE=aarch64-linux-gnu-
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+          export KCFLAGS="-Wno-error=compare-distinct-pointer-types -Wno-error=align-mismatch"
+          export KBUILD_CFLAGS="-Wno-error=compare-distinct-pointer-types -Wno-error=align-mismatch"
 
-            export CLANG_TRIPLE=aarch64-linux-gnu-
-            export CROSS_COMPILE=aarch64-linux-gnu-
-            export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+          clang --version
+          ld.lld --version
 
-            export KCFLAGS="-Wno-error=compare-distinct-pointer-types -Wno-error=align-mismatch"
-
-            clang --version
-            ld.lld --version
-
-            make O=out $DEFCONFIG
-            make O=out -j"$(nproc)"
+          make O=out $DEFCONFIG
+          make O=out -j"$(nproc)"
 
       - name: Find built kernel image
         run: |
