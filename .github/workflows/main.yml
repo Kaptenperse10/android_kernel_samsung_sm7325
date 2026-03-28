@@ -26,11 +26,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            bc bison build-essential ccache curl flex gawk git \
-            libelf-dev libncurses-dev libssl-dev lz4 pahole \
-            python3 python-is-python3 rsync unzip zip zstd
+         sudo apt-get update
+         sudo apt-get install -y \
+         bc bison build-essential ccache curl flex gawk git \
+         libelf-dev libncurses-dev libssl-dev lz4 pahole \
+         python3 python-is-python3 rsync unzip zip zstd \
+         clang lld llvm
 
       - name: Show repo info
         run: |
@@ -40,16 +41,20 @@ jobs:
 
       - name: Build kernel
         run: |
-          export ARCH=arm64
-          export SUBARCH=arm64
-          export KBUILD_BUILD_USER=github
-          export KBUILD_BUILD_HOST=actions
-          export CC=clang
-          export LLVM=1
-          export LLVM_IAS=1
+           export ARCH=arm64
+           export SUBARCH=arm64
+           export KBUILD_BUILD_USER=github
+           export KBUILD_BUILD_HOST=actions
+           export CC=clang
+           export LD=ld.lld
+           export LLVM=1
+           export LLVM_IAS=1
 
-          make O=out $DEFCONFIG
-          make O=out -j"$(nproc)"
+           clang --version
+           ld.lld --version
+
+           make O=out $DEFCONFIG
+           make O=out -j"$(nproc)"
 
       - name: Find built kernel image
         run: |
