@@ -70,6 +70,10 @@ jobs:
           make O=out $DEFCONFIG
           make O=out -j"$(nproc)"
 
+      - name: Debug output tree
+        run: |
+            find out/arch/arm64/boot -maxdepth 3 -type f | sort || true
+   
       - name: Find built kernel image
         run: |
           mkdir -p release
