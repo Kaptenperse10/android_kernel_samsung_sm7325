@@ -35,8 +35,8 @@ def interpret_warning(line):
     line = line.rstrip().decode()
     m = warning_re.match(line)
     if m and m.group(2) not in allowed_warnings:
-    print("warning, ignored by CI:", m.group(2))
-    return
+        print("warning, ignored by CI:", m.group(2))
+        return
 
 def run_gcc():
     args = sys.argv[1:]
