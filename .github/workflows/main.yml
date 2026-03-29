@@ -39,6 +39,13 @@ jobs:
           pwd
           ls
           ls arch/arm64/configs/vendor/
+   
+      - name: Fix script permissions
+        run: |
+          chmod +x scripts/gcc-wrapper.py || true
+          chmod +x scripts/gcc-version.sh || true
+          chmod +x scripts/clang-version.sh || true
+          chmod +x scripts/gcc-plugin.sh || true
     
       - name: Build kernel
         run: |
