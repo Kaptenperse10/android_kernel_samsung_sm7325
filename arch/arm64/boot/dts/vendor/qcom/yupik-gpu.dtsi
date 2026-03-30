@@ -397,7 +397,7 @@
 				#address-cells = <1>;
 				#size-cells = <0>;
 
-				qcom,speed-bin = <117>;
+				qcom,speed-bin = <129>;
 				qcom,initial-pwrlevel = <2>;
 
 				qcom,gpu-pwrlevel@0 {
@@ -492,7 +492,7 @@
 				#address-cells = <1>;
 				#size-cells = <0>;
 
-				qcom,speed-bin = <129>;
+				qcom,speed-bin = <117>;
 				qcom,initial-pwrlevel = <3>;
 
 				qcom,gpu-pwrlevel@0 {
